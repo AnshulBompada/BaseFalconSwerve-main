@@ -60,6 +60,17 @@ public class Swerve extends SubsystemBase {
                                 );
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
+        SmartDashboard.putNumber("KMod 1 speed", swerveModuleStates[0].speedMetersPerSecond);
+        SmartDashboard.putNumber("KMod 2 speed", swerveModuleStates[1].speedMetersPerSecond);
+        SmartDashboard.putNumber("KMod 3 speed", swerveModuleStates[2].speedMetersPerSecond);
+        SmartDashboard.putNumber("KMod 4 speed", swerveModuleStates[3].speedMetersPerSecond);
+
+        SmartDashboard.putNumber("KMod 1 angle", swerveModuleStates[0].angle.getDegrees());
+        SmartDashboard.putNumber("KMod 2 angle", swerveModuleStates[1].angle.getDegrees());
+        SmartDashboard.putNumber("KMod 3 angle", swerveModuleStates[2].angle.getDegrees());
+        SmartDashboard.putNumber("KMod 4 angle", swerveModuleStates[3].angle.getDegrees());
+
+
         for(SwerveModule mod : mSwerveMods){
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
         }

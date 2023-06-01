@@ -1,10 +1,11 @@
 package frc.robot;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.lib.math.Conversions;
 import frc.lib.util.CTREModuleState;
 import frc.lib.util.SwerveModuleConstants;
@@ -25,6 +26,9 @@ public class SwerveModule {
 
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
 
+    ProfiledPIDController angleController = new ProfiledPIDController(0, 0, 0, 
+                                            new TrapezoidProfile.Constraints(0, 0));
+
     public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants){
         this.moduleNumber = moduleNumber;
         this.angleOffset = moduleConstants.angleOffset;
@@ -42,6 +46,8 @@ public class SwerveModule {
         configDriveMotor();
 
         lastAngle = getState().angle;
+
+        angleController.enableContinuousInput(-180, 180);
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop){
@@ -65,7 +71,12 @@ public class SwerveModule {
     private void setAngle(SwerveModuleState desiredState){
         Rotation2d angle = (Math.abs(desiredState.speedMetersPerSecond) <= (Constants.Swerve.maxSpeed * 0.01)) ? lastAngle : desiredState.angle; //Prevent rotating module if speed is less then 1%. Prevents Jittering.
         
-        mAngleMotor.set(ControlMode.Position, Conversions.degreesToFalcon(angle.getDegrees(), Constants.Swerve.angleGearRatio));
+        //mAngleMotor.set(ControlMode.Position, Conversions.degreesToFalcon(angle.getDegrees(), Constants.Swerve.angleGearRatio));
+
+        double velocityDegreesPS = angleController.calculate(getAngle().getDegrees(), angle.getDegrees());
+        double velocityFalconsPS = Conversions.MPSToFalcon(velocityDegreesPS, Constants.Swerve.wheelCircumference, Constants.Swerve.driveGearRatio);
+        
+        mDriveMotor.set(ControlMode.Velocity, velocityFalconsPS, DemandType.ArbitraryFeedForward, feedforward.calculate(desiredState.speedMetersPerSecond));
         lastAngle = angle;
     }
 
